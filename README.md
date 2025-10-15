@@ -1,0 +1,1 @@
+This creates a font atlas specifically for rendering text on an HTML5 canvas.
