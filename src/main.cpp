@@ -114,6 +114,18 @@ struct GlyphData {
     FT_Pos advance;
 };
 
+void PrintHelp() {
+    printf(
+        "atlasgen --font <file> --out <folder>\n"
+        "Optional:\n"
+        "  --size <pixels>     = Set font height. Default is 16.\n"
+        "  --mono              = Render 1-bit black & white with no anti-aliasing\n"
+        "  --range <int> <int> = Instead of rendering all codepoints, render this range.\n"
+        "                        Multiple --range flags can be used.\n"
+        "  --ascii             = Same as --range 32 126\n"
+    );
+};
+
 int main(int argc, char** argv) {
     auto timeBegin = std::chrono::high_resolution_clock::now();
 
@@ -129,7 +141,9 @@ int main(int argc, char** argv) {
     std::unordered_map<std::string, FT_Fixed> axes;
     bool mono = false;
 
+    size_t numFlags = 0;
     while (auto flag = args.Next()) {
+        ++numFlags;
         if (flag == "--font") {
             fontPath = args.Next();
             if (!fontPath) {
@@ -162,6 +176,8 @@ int main(int argc, char** argv) {
                 return -1;
             }
             cpRanges.push_back({*first, *last});
+        } else if (flag == "--ascii") {
+            cpRanges.push_back({32,126});
         } else if (flag == "--axis") {
             auto name = args.Next();
             auto value = ParseFloat<double>(args.Next());
@@ -172,14 +188,21 @@ int main(int argc, char** argv) {
             axes.emplace(*name, (FT_Fixed)(*value * (1<<16)));
         } else if (flag == "--mono") {
             mono = true;
+        } else if (flag == "--help") {
+            PrintHelp();
+            return 0;
         } else {
             printf("Unknown flag: %s\n", flag->data());
             return -1;
         }
     }
 
-    if (!fontPath || !outDir) {
+    if (numFlags == 0) {
+        PrintHelp();
+        return 0;
+    } else if (!fontPath || !outDir) {
         printf("--font and --out must be set\n");
+        PrintHelp();
         return -1;
     }
 
