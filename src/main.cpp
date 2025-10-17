@@ -339,7 +339,7 @@ int main(int argc, char** argv) {
 
 
     std::vector<uint8_t> atlasBmp;
-    const size_t atlasChannels = 1;
+    const size_t atlasChannels = 2;
     const size_t atlasPitch = atlasW * atlasChannels;
     atlasBmp.resize(atlasW * atlasH * atlasChannels);
     memset(atlasBmp.data(), 0, atlasBmp.size());
@@ -370,7 +370,7 @@ int main(int argc, char** argv) {
                 for (unsigned int x = 0; x < face->glyph->bitmap.width; ++x) {
                     const unsigned char* src = &buffer[x*src_channels + y*src_pitch];
                     unsigned char* dst = &atlasBmp[(x + rect.x)*atlasChannels + (y+rect.y)*atlasPitch];
-                    dst[0] = src[0];
+                    dst[0] = dst[1] = src[0];
                 }
             }
             break;
@@ -381,7 +381,7 @@ int main(int argc, char** argv) {
                 for (unsigned int x = 0; x < face->glyph->bitmap.width; ++x) {
                     const unsigned char* src = &buffer[(x/8) + y*src_pitch];
                     unsigned char* dst = &atlasBmp[(x + rect.x)*atlasChannels + (y+rect.y)*atlasPitch];
-                    dst[0] = ((src[0] >> (7 - (x%8))) & 1) * 0xFF;
+                    dst[0] = dst[1] = ((src[0] >> (7 - (x%8))) & 1) * 0xFF;
                 }
             }
             break;
@@ -409,7 +409,7 @@ int main(int argc, char** argv) {
     png.version = PNG_IMAGE_VERSION;
     png.width = atlasW;
     png.height = atlasH;
-    png.format = PNG_FORMAT_GRAY;
+    png.format = PNG_FORMAT_GA;
     int code = png_image_write_to_file(&png, outAtlas.string().c_str(), 0, atlasBmp.data(), atlasPitch, nullptr);
     if (code != 1) {
         printf("Failed to write PNG file (%d)\n", code);
