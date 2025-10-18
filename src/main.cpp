@@ -342,7 +342,7 @@ int main(int argc, char** argv) {
     const size_t atlasChannels = 2;
     const size_t atlasPitch = atlasW * atlasChannels;
     atlasBmp.resize(atlasW * atlasH * atlasChannels);
-    memset(atlasBmp.data(), 0, atlasBmp.size());
+    memset(atlasBmp.data(), 0xFF, atlasBmp.size());
     for (auto& pair : glyphs) {
         auto& glyph = pair.second;
         if (glyph.rectIndex == (size_t)-1) {
@@ -370,7 +370,7 @@ int main(int argc, char** argv) {
                 for (unsigned int x = 0; x < face->glyph->bitmap.width; ++x) {
                     const unsigned char* src = &buffer[x*src_channels + y*src_pitch];
                     unsigned char* dst = &atlasBmp[(x + rect.x)*atlasChannels + (y+rect.y)*atlasPitch];
-                    dst[0] = dst[1] = src[0];
+                    dst[1] = src[0];
                 }
             }
             break;
@@ -381,7 +381,7 @@ int main(int argc, char** argv) {
                 for (unsigned int x = 0; x < face->glyph->bitmap.width; ++x) {
                     const unsigned char* src = &buffer[(x/8) + y*src_pitch];
                     unsigned char* dst = &atlasBmp[(x + rect.x)*atlasChannels + (y+rect.y)*atlasPitch];
-                    dst[0] = dst[1] = ((src[0] >> (7 - (x%8))) & 1) * 0xFF;
+                    dst[1] = ((src[0] >> (7 - (x%8))) & 1) * 0xFF;
                 }
             }
             break;
