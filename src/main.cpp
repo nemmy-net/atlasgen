@@ -342,7 +342,10 @@ int main(int argc, char** argv) {
     const size_t atlasChannels = 2;
     const size_t atlasPitch = atlasW * atlasChannels;
     atlasBmp.resize(atlasW * atlasH * atlasChannels);
-    memset(atlasBmp.data(), 0xFF, atlasBmp.size());
+    for (size_t i = 0; i < atlasW * atlasH; ++i) {
+        atlasBmp[i * 2] = 0xFF;
+        atlasBmp[i * 2 + 1] = 0;
+    }
     for (auto& pair : glyphs) {
         auto& glyph = pair.second;
         if (glyph.rectIndex == (size_t)-1) {
