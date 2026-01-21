@@ -118,11 +118,13 @@ void PrintHelp() {
     printf(
         "atlasgen --font <file> --out <folder>\n"
         "Optional:\n"
-        "  --size <pixels>     = Set font height. Default is 16.\n"
-        "  --mono              = Render 1-bit black & white with no anti-aliasing\n"
-        "  --range <int> <int> = Instead of rendering all codepoints, render this range.\n"
-        "                        Multiple --range flags can be used.\n"
-        "  --ascii             = Same as --range 32 126\n"
+        "  --size <pixels>       = Set font height. Default is 16.\n"
+        "  --mono                = Render 1-bit black & white with no anti-aliasing\n"
+        "  --range <int> <int>   = Instead of rendering all codepoints, render this range.\n"
+        "                          Multiple --range flags can be used.\n"
+        "  --ascii               = Same as --range 32 126\n"
+        "  --add-height <pixels> = Adjust the vertical distance between lines\n"
+        "  --axis <name> <float> = Set the value of a font's axis\n"
     );
 };
 
@@ -136,6 +138,7 @@ int main(int argc, char** argv) {
     ArgIter args{argc, argv};
     std::optional<std::string_view> fontPath, outDir;
     int desiredSize = 16;
+    int32_t addHeight = 0;
     // Array of first-last codepoint ranges.
     std::vector<std::pair<uint32_t, uint32_t>> cpRanges;
     std::unordered_map<std::string, FT_Fixed> axes;
@@ -191,6 +194,13 @@ int main(int argc, char** argv) {
         } else if (flag == "--help") {
             PrintHelp();
             return 0;
+        } else if (flag == "--add-height") {
+            auto add = ParseInt<int32_t>(args.Next());
+            if (!add) {
+                printf("expected --add-height <pixels>");
+                return -1;
+            }
+            addHeight = *add;
         } else {
             printf("Unknown flag: %s\n", flag->data());
             return -1;
@@ -485,7 +495,7 @@ int main(int argc, char** argv) {
     f << "],\"metrics\":{";
     f << "\"ascender\":" << (face->size->metrics.ascender >> 6) << ",";
     f << "\"descender\":" << (face->size->metrics.descender >> 6) << ",";
-    f << "\"height\":" << (face->size->metrics.height >> 6);
+    f << "\"height\":" << (face->size->metrics.height >> 6) + addHeight;
     f << "}";
     f << '}';
     f.close();
