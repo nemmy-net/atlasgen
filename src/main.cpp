@@ -11,6 +11,7 @@
 
 #include <freetype/freetype.h>
 #include <freetype/ftmm.h>
+#include <freetype/ftoutln.h>
 #include <png.h>
 #include "defer.hpp"
 
@@ -125,6 +126,7 @@ void PrintHelp() {
         "  --ascii               = Same as --range 32 126\n"
         "  --add-height <pixels> = Adjust the vertical distance between lines\n"
         "  --axis <name> <float> = Set the value of a font's axis\n"
+        "  --embolden            = Stretch glyph outlines to be wider\n"
     );
 };
 
@@ -143,6 +145,7 @@ int main(int argc, char** argv) {
     std::vector<std::pair<uint32_t, uint32_t>> cpRanges;
     std::unordered_map<std::string, FT_Fixed> axes;
     bool mono = false;
+    bool embolden = false;
 
     size_t numFlags = 0;
     while (auto flag = args.Next()) {
@@ -201,6 +204,8 @@ int main(int argc, char** argv) {
                 return -1;
             }
             addHeight = *add;
+        } else if (flag == "--embolden") {
+            embolden = true;
         } else {
             printf("Unknown flag: %s\n", flag->data());
             return -1;
@@ -299,6 +304,11 @@ int main(int argc, char** argv) {
                 continue; // We already store this glyph
             }
             CheckFtErr(FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT));
+            if (embolden && face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
+                CheckFtErr(FT_Outline_EmboldenXY(&face->glyph->outline, 1 << 6, 0 << 6));
+                CheckFtErr(FT_Render_Glyph(face->glyph, mono ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_LIGHT));
+            }
+
             auto& glyph = insertion.first->second;
             glyph.rectIndex = (size_t)-1;
             glyph.glyphIndex = glyphIndex;
@@ -363,9 +373,13 @@ int main(int argc, char** argv) {
         }
 
         CheckFtErr(FT_Load_Glyph(face, glyph.glyphIndex, FT_LOAD_DEFAULT));
+        if (embolden && face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
+            CheckFtErr(FT_Outline_EmboldenXY(&face->glyph->outline, 1 << 6, 0 << 6));
+        }
         if (face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
             CheckFtErr(FT_Render_Glyph(face->glyph, mono ? FT_RENDER_MODE_MONO : FT_RENDER_MODE_LIGHT));
         }
+
 
         stbrp_rect& rect = rects[glyph.rectIndex];
         // Remove padding
