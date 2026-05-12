@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(atlasgen)
+add_compile_options(/MP) # Enable multi-threaded compiling
+add_compile_options($<IF:$<CONFIG:Debug>,/MTd,/MT>) # Statically linked runtime
 add_executable(atlasgen src/main.cpp)
 target_compile_features(atlasgen PUBLIC cxx_std_20)
 
